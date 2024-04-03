@@ -1,0 +1,88 @@
+#!/usr/bin/env bash
+# webfinger
+
+if [ ! `which jq` ]
+then
+    echo Installing 'jq'
+    sudo apt-get install jq -y
+fi
+
+set -euo pipefail
+
+rel=
+verbose=
+
+rawurlencode() {
+    local string="${1}"
+    local strlen=${#string}
+    local encoded=""
+    local pos c o
+
+    for (( pos=0 ; pos<strlen ; pos++ )); do
+        c=${string:$pos:1}
+        case "$c" in
+            [-_.~a-zA-Z0-9] ) o="${c}" ;;
+            * )               printf -v o '%%%02x' "'$c"
+        esac
+        encoded+="${o}"
+    done
+    echo "${encoded}"    # You can either set a return variable (FASTER)
+    REPLY="${encoded}"   #+or echo the result (EASIER)... or both... :p
+}
+
+usage() {
+>&2 cat << EOF
+Usage: $0
+    [ -v | --verbose ]
+    [ -r | --rel | --REL input ]
+    <user@domain>
+EOF
+exit 1
+}
+
+args=$(getopt -a -o hvr: --long help,verbose,rel:,REL: -- "$@")
+if [[ $? -gt 0 ]]; then
+  usage
+fi
+
+eval set -- ${args}
+while :
+do
+  case $1 in
+    -h | --help) usage; shift;;
+    -v | --verbose) verbose=true; shift;;
+    -r | --rel | --REL) rel=$2; shift 2;;
+    # -- means the end of the arguments; drop this, and break out of the while loop
+    --) shift; break ;;
+    *) >&2 echo Unsupported option: $1
+       usage ;;
+  esac
+done
+
+if [[ $# -eq 0 ]]; then
+  usage
+fi
+
+name=`echo $1 | sed 's/\(.*\)@\(.*\)$/\1/'`
+domain=`echo $1 | sed 's/\(.*\)@\(.*\)$/\2/'`
+server=$domain
+
+address=${name}@${domain}
+resource=acct:$(rawurlencode $address)
+
+if [ ! -n "${rel}" ]; then
+    command="curl -s -H \"Accept: application/jrd+json\" https://${server}/.well-known/webfinger?resource=${resource}"
+else
+    command="curl -s -H \"Accept: application/jrd+json\" https://${server}/.well-known/webfinger?resource=${resource}&rel=${rel}"
+fi
+
+if [ -n "${verbose}" ]
+then
+    echo ${command}
+    echo
+fi
+
+result=`${command}`
+#echo ${result}
+
+echo $result | jq .
