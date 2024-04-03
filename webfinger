@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 # webfinger
 
+if [ ! `which curl` ]
+then
+    echo Installing 'curl'
+    sudo apt-get install curl -y
+fi
+
 if [ ! `which jq` ]
 then
     echo Installing 'jq'
