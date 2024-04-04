@@ -1,0 +1,78 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "schema:jrd",
+    "title": "Javascript Resource Descriptor",
+    "description": "The JSON Resource Descriptor (JRD) is originally introduced in RFC 6415 and based on the Extensible Resource Descriptor (XRD) format",
+    "properties": {
+        "subject": {
+            "type": "string",
+            "format": "uri",
+            "description": "A URI that identifies the entity that the JRD describes"
+        },
+        "aliases": {
+            "type": "array",
+            "items": {
+                "type": "string",
+                "format": "uri"
+            },
+            "format": "uri",
+            "description": "An array of zero or more URI strings that identify the same entity as the \"subject\" URI"
+        },
+        "properties": {
+            "$ref": "#/$defs/properties"
+        },
+        "links": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "rel": {
+                        "type": "string",
+                        "pattern": "^[a-zA-Z]",
+                        "description": "The value of the \"rel\" member MUST contain exactly one URI or registered relation type.  The URI or registered relation type identifies the type of the link relation."
+                    },
+                    "type": {
+                        "type": "string",
+                        "description": "A string that indicates the media type of the target resource (see RFC 6838)"
+                    },
+                    "href": {
+                        "type": "string",
+                        "format": "uri",
+                        "description": "A string that contains a URI pointing to the target resource"
+                    },
+                    "titles": {
+                        "type": "object",
+                        "description": "The \"titles\" object comprises zero or more name/value pairs whose names are a language tag [11] or the string \"und\"."
+                    },
+                    "properties": {
+                        "$ref": "#/$defs/properties"
+                    }
+                },
+                "required": [
+                    "rel"
+                ]
+            },
+            "description": "This array has any number of member objects, each of which represents a link"
+        }
+    },
+    "$defs": {
+        "properties": {
+            "type": "object",
+            "propertyNames": {
+                "format": "uri"
+            },
+            "patternProperties": {
+                ".*": {
+                    "oneOf": [
+                        {
+                            "type": "string"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                }
+            }
+        }
+    }
+}
