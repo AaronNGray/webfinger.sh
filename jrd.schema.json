@@ -3,6 +3,7 @@
     "$id": "schema:jrd",
     "title": "Javascript Resource Descriptor",
     "description": "The JSON Resource Descriptor (JRD) is originally introduced in RFC 6415 and based on the Extensible Resource Descriptor (XRD) format",
+    "type": "object",
     "properties": {
         "subject": {
             "type": "string",
@@ -15,7 +16,6 @@
                 "type": "string",
                 "format": "uri"
             },
-            "format": "uri",
             "description": "An array of zero or more URI strings that identify the same entity as the \"subject\" URI"
         },
         "properties": {
