@@ -5,6 +5,7 @@
 name_regex='s/^\(.*\)@\(.*\)$/\1/'
 domain_regex='s/^\(.*\)@\(.*\)$/\2/'
 mastodon_username_validation_regex='s/^[a-z0-9]\+\([.-]*[a-z0-9]\+\)*$//'
+RFC3077_username_validation_regex='s/^\(.*\)$//'
 
 program=$0
 program_directory="$(dirname "$0")"
@@ -24,20 +25,29 @@ then
 fi
 
 if [ -n "${validate}" ]; then
-    if [[ `which python` && `which pip` ]];
-    then
-        pip install check-jsonschema       
-    elif [ ! `which ajv` ];
-    then
-        if [[ `which node` && `which npm` ]];
+    echo Installing JRD validator
+    if [ ! `which check-jsonschema` ]; then
+        if [[ `which python` && `which pip` ]];
         then
-            npm install -g ajv-cli ajv-formats
+            echo Installing Python check-jsonschema
+            pip install check-jsonschema       
+        elif [ ! `which ajv` ];
+        then
+            if [[ `which node` && `which npm` ]];
+            then
+                echo Installing ajv-cli
+                npm install -g ajv-cli ajv-formats
+            fi
+        else
+            echo "Unable to install JSON Schema validator"
         fi
     fi
     if [ ! -e ${program_directory}/jrd.schema.json ]; then
         curl -s https://raw.githubusercontent.com/AaronNGray/webfinger.sh/main/jrd.schema.json >${program_directory}/jrd.schema.json
     fi
 fi
+
+# misc bash good practice 
 
 set -euo pipefail
 
@@ -117,6 +127,16 @@ name=`echo $1 | sed ${name_regex}`
 domain=`echo $1 | sed ${domain_regex}`
 server=$domain
 
+# verbose output
+
+if [ -n "${verbose}" ]
+then
+    echo name=${name}
+    echo domain=${domain}
+    echo server=${server}
+    echo
+fi
+
 # mastodon username validation
 
 if [ -n "${mastodon}" ]; then
@@ -134,16 +154,21 @@ if [ -n "${mastodon}" ]; then
         echo "Error: invalid masterdon username"
         exit
     fi
-fi
-
-# verbose output
-
-if [ -n "${verbose}" ]
-then
-    echo name=${name}
-    echo domain=${domain}
-    echo server=${server}
-    echo
+else
+    result=`echo ${name} | sed -e ${RFC3077_username_validation_regex}`
+    if [ ! -n ${verbose} ]; then
+        echo !${result}!
+    fi
+    if [[ ${result} == "" ]]; then
+        valid=true
+    fi
+    if [[ -n "${verbose}" && ${valid} == "true" ]]; then
+        echo "Valid RFC3077 username"
+    fi
+    if [ ! -n "${valid}" ]; then
+        echo "Error: invalid RFC3077 username"
+        exit
+    fi
 fi
 
 # http get
@@ -166,6 +191,7 @@ command="curl -s --retry 2 --retry-max-time 30 -H \"${accept}\" ${uri}"
 
 if [ -n "${verbose}" ]
 then
+    echo
     echo ${command}
     echo
 fi
@@ -217,3 +243,5 @@ then
 else
     echo Not found
 fi
+
+#eof
