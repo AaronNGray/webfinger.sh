@@ -12,7 +12,7 @@ JRD Schema validation if used will also require either Python and PIP, or Node.j
 
 ```
 Usage: ./webfinger
-    [ -r | --rel | --REL input ]
+    [ -r <rel> | --rel <rel> | --REL <rel> ]
     [ -V | --validate ]
     [ -M | --mastodon ]
     [ -v | --verbose ]
@@ -23,7 +23,7 @@ Usage: ./webfinger
 Provides infromation about execuation steps and variables.
 ## --fake | -f
 Do not perform the curl HTTP REST GET call to `https://<server>/.well-known/webfinger&resource=<resource>`
-## --rel \<rel\> | -r \<rel\>
+## --rel \<rel\> | --REL \<rel\> | -r \<rel\>
 set the vale of rel in curl call `https://<server>/.well-known/webfinger&resource=<resource>&rel=<rel>`
 ## --mastadon | -M
 perform MORE restrictive Mastodon checking on the `username` rather than using RFC7033 checking.
