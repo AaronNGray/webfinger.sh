@@ -2,10 +2,10 @@
 # webfinger
 
 # constants
-name_regex='s/^\(.*\)@\(.*\)$/\1/'
-domain_regex='s/^\(.*\)@\(.*\)$/\2/'
-mastodon_username_validation_regex='s/^[a-z0-9]\+\([.-]*[a-z0-9]\+\)*$//'
-RFC3077_username_validation_regex='s/^\(.*\)$//'
+name_regex='s/^(.*)@(.*)$/\1/'
+domain_regex='s/^(.*)@(.*)$/\2/'
+mastodon_username_validation_regex='s/^[a-z0-9]+([.-]*[a-z0-9]+)*$//'
+RFC3077_username_validation_regex='s/^(.*)$//'
 
 # install utilities
 
@@ -128,8 +128,8 @@ fi
 
 # decode handle
 
-name=`echo $1 | sed ${name_regex}`
-domain=`echo $1 | sed ${domain_regex}`
+name=`echo $1 | sed -E -e ${name_regex}`
+domain=`echo $1 | sed -E -e ${domain_regex}`
 server=$domain
 
 # check lengths
@@ -165,7 +165,7 @@ fi
 # mastodon username validation
 
 if [ -n "${mastodon}" ]; then
-    result=`echo ${name} | sed -e ${mastodon_username_validation_regex}`
+    result=`echo ${name} | sed -E -e ${mastodon_username_validation_regex}`
     if [[ ${result} == "" ]]; then
         valid=true
     fi
@@ -177,7 +177,7 @@ if [ -n "${mastodon}" ]; then
         exit
     fi
 else
-    result=`echo ${name} | sed -e ${RFC3077_username_validation_regex}`
+    result=`echo ${name} | sed -E -e ${RFC3077_username_validation_regex}`
     if [[ ${result} == "" ]]; then
         valid=true
     fi
