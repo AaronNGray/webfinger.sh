@@ -1,7 +1,7 @@
 # webfinger.sh
 Bash Shell implementation of webfinger (RFC7033) client
 
-# implmentation
+# implementation
 This utility has been implemented along side the [swicg / activitypub-webfinger](https://swicg.github.io/activitypub-webfinger/) standard document in order for testing and compliance.
 
 # Instillation
