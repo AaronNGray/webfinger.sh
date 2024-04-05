@@ -1,6 +1,9 @@
 # webfinger.sh
 Bash Shell implementation of webfinger (RFC7033) client
 
+# implmentation
+This utility has been implemented along side the [swicg / activitypub-webfinger](https://swicg.github.io/activitypub-webfinger/) standard document in order for testing and compliance.
+
 # Instillation
 The only file required is `webfinger` it is self installing, installing `curl` and `jq` if not already installed, requiring super user `sudo` password.
 JRD Schema validation if used will also require either Python and PIP, or Node.js and NPM, installing `check-jsonschema` or `ajs-cli` and `ajv-formats` respectively.
