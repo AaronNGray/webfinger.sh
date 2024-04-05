@@ -7,9 +7,6 @@ domain_regex='s/^\(.*\)@\(.*\)$/\2/'
 mastodon_username_validation_regex='s/^[a-z0-9]\+\([.-]*[a-z0-9]\+\)*$//'
 RFC3077_username_validation_regex='s/^\(.*\)$//'
 
-program=$0
-program_directory="$(dirname "$0")"
-
 # install utilities
 
 if [ ! `which curl` ]
@@ -24,7 +21,7 @@ then
     sudo apt-get install jq -y
 fi
 
-if [ -n "${validate}" ]; then
+if [ ! -n "${validate}" ]; then
     echo Installing JRD validator
     if [ ! `which check-jsonschema` ]; then
         if [[ `which python` && `which pip` ]];
@@ -42,8 +39,9 @@ if [ -n "${validate}" ]; then
             echo "Unable to install JSON Schema validator"
         fi
     fi
-    if [ ! -e ${program_directory}/jrd.schema.json ]; then
-        curl -s https://raw.githubusercontent.com/AaronNGray/webfinger.sh/main/jrd.schema.json >${program_directory}/jrd.schema.json
+    if [ ! -f /tmp/jrd.schema.json ]; then
+        echo loading jrd.schema.json
+        curl -s https://raw.githubusercontent.com/AaronNGray/webfinger.sh/main/jrd.schema.json >/tmp/jrd.schema.json
     fi
 fi
 
@@ -225,7 +223,7 @@ then
         echo
 
         if [ `which ajv` ]; then
-            ajv --spec=draft2020 -c ajv-formats -s ${program_directory}/jrd.schema.json -d /tmp/out.json >null
+            ajv --spec=draft2020 -c ajv-formats -s /tmp/jrd.schema.json -d /tmp/out.json >null
             if [ $? ]; then
                 echo "valid JRD"
             fi
