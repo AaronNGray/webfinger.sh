@@ -38,7 +38,7 @@ validate the returned JRD (JSON Resource Descriptor) against a JRD Schema.
 ## Mastodon usage
 `webfinger -M AaronNGray@fosstodon.org`
 
-## validattiom
+## validation
 `webfinger -V AaronNGray@fosstodon.org`
 
 ## test usage
