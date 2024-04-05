@@ -58,6 +58,8 @@ validate=
 mastodon=
 valid=
 fake=
+timeout=30
+retries=3
 
 # encode url
 
@@ -84,17 +86,19 @@ rawurlencode() {
 usage() {
 >&2 cat << EOF
 Usage: $0
-    [ -r | --rel | --REL input ]
+    [ -r <rel> | --rel <rel> | --REL <rel> ]
     [ -V | --validate ]
     [ -M | --mastodon ]
     [ -v | --verbose ]
     [ -f | --fake ]
+    [ --timeout <seconds> ]
+    [ --retries <retries> ]
     <user@domain>
 EOF
 exit 1
 }
 
-args=$(getopt -a -o VMhvfr: --long help,verbose,validate,mastodon,rel:,REL: -- "$@")
+args=$(getopt -a -o VMhvfr: --long help,verbose,validate,mastodon,retries:,timeout:,rel:,REL: -- "$@")
 if [[ $? -gt 0 ]]; then
   usage
 fi
@@ -109,6 +113,8 @@ do
     -r | --rel | --REL) rel=$2; shift 2;;
     -f | --fake) fake=true; shift;;
     -M | --mastodon) mastodon=true; shift;;
+    --timeout) timeout=$2; shift 2;;
+    --retries) retries=$2; shift 2;;
     # -- means the end of the arguments; drop this, and break out of the while loop
     --) shift; break ;;
     *) >&2 echo Unsupported option: $1
@@ -152,9 +158,6 @@ if [ -n "${mastodon}" ]; then
     fi
 else
     result=`echo ${name} | sed -e ${RFC3077_username_validation_regex}`
-    if [ -z ${verbose} ]; then
-        echo !${result}!
-    fi
     if [[ ${result} == "" ]]; then
         valid=true
     fi
@@ -181,7 +184,7 @@ else
     uri="${base}?resource=${resource}&rel=${rel}"
 fi
 
-command="curl -s --retry 2 --retry-max-time 30 -H \"${accept}\" ${uri}"
+command="curl -s --retry ${retries} --retry-max-time ${timeout} -L -H \"${accept}\" ${uri}"
 
 # verbose output
 
