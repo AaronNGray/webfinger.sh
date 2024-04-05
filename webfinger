@@ -21,6 +21,9 @@ set -euo pipefail
 rel=
 verbose=
 validate=
+mastodon=
+valid=
+fake=
 
 rawurlencode() {
     local string="${1}"
@@ -45,13 +48,15 @@ usage() {
 Usage: $0
     [ -r | --rel | --REL input ]
     [ -V | --validate ]
+    [ -M | --mastodon ]
     [ -v | --verbose ]
+    [ -f | --fake ]
     <user@domain>
 EOF
 exit 1
 }
 
-args=$(getopt -a -o Vhvr: --long help,verbose,validate,json-ld,rel:,REL: -- "$@")
+args=$(getopt -a -o VMhvfr: --long help,verbose,validate,mastodon,rel:,REL: -- "$@")
 if [[ $? -gt 0 ]]; then
   usage
 fi
@@ -64,6 +69,8 @@ do
     -v | --verbose) verbose=true; shift;;
     -V | --validate) validate=true; shift;;
     -r | --rel | --REL) rel=$2; shift 2;;
+    -f | --fake) fake=true; shift;;
+    -M | --mastodon) mastodon=true; shift;;
     # -- means the end of the arguments; drop this, and break out of the while loop
     --) shift; break ;;
     *) >&2 echo Unsupported option: $1
@@ -76,6 +83,26 @@ if [[ $# -eq 0 ]]; then
 fi
 
 name=`echo $1 | sed 's/\(.*\)@\(.*\)$/\1/'`
+
+mastodon_regex='s/[a-z0-9]\+\([.-]*[a-z0-9]\+\)*//'
+
+if [ -n "${mastodon}" ]; then
+    result=`echo ${name} | sed -e 's/[a-z0-9]\+\([.-]*[a-z0-9]\+\)*//'`
+    if [ ! -n ${verbose} ]; then
+        echo !${result}!
+    fi
+    if [[ ${result} == "" ]]; then
+        valid=true
+    fi
+    if [[ -n "${verbose}" && ${valid} == "true" ]]; then
+        echo "Valid Mastodon username"
+    fi
+    if [ ! -n "${valid}" ]; then
+        echo "Error: invalid masterdon username"
+        exit
+    fi
+fi
+
 domain=`echo $1 | sed 's/\(.*\)@\(.*\)$/\2/'`
 server=$domain
 
@@ -107,6 +134,10 @@ if [ -n "${verbose}" ]
 then
     echo ${command}
     echo
+fi
+
+if [ -n "${fake}" ]; then
+    exit
 fi
 
 result=`${command}`
