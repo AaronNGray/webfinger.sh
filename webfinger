@@ -132,6 +132,26 @@ name=`echo $1 | sed ${name_regex}`
 domain=`echo $1 | sed ${domain_regex}`
 server=$domain
 
+# check lengths
+
+if [[ ${name} = "" ]]; then
+    echo "username blank"
+    exit
+fi
+if [[ ${domain} = "" ]]; then
+    echo "hostname blank"
+    exit
+fi
+
+if [[ ${#name} -gt 128 ]]; then
+    echo "username too long, ${#name}"
+    exit
+fi
+if [[ ${#domain} -gt 128 ]]; then
+    echo "hostname too long, ${#domain}"
+    exit
+fi
+
 # verbose output
 
 if [ -n "${verbose}" ]
