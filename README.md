@@ -19,30 +19,30 @@ Usage: ./webfinger
     [ -f | --fake ]
     <user@domain>
 ```
-## --verbose
+## --verbose | -v
 Provides infromation about execuation steps and variables.
-## --fake
+## --fake | -f
 Do not perform the curl HTTP REST GET call to `https://<server>/.well-known/webfinger&resource=<resource>`
-## --rel
+## --rel <rel> | -r <rel>
 set the vale of rel in curl call `https://<server>/.well-known/webfinger&resource=<resource>&rel=<rel>`
-## --mastadon
+## --mastadon | -M
 perform MORE restrictive Mastodon checking on the `username` rather than using RFC7033 checking.
-## --validate
+## --validate | -V
 validate the returned JRD (JSON Resource Descriptor) against a JRD Schema.
 
 # Example usage
 
-# basic normal usage
+## basic normal usage
 `webfinger AaronNGray@fosstodon.org`
 
-# Mastodon usage
+## Mastodon usage
 `webfinger -M AaronNGray@fosstodon.org`
 
-# validattiom
+## validattiom
 `webfinger -V AaronNGray@fosstodon.org`
 
-# test usage
+## test usage
 `webfinger -vf AaronNGray@fosstodon.org`
 
-# rel usage
+## rel usage
 `webfinger --rel self AaronNGray@fosstodon.org`
