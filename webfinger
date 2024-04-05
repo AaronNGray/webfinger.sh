@@ -21,15 +21,16 @@ then
     sudo apt-get install jq -y
 fi
 
-if [ ! -n "${validate}" ]; then
-    echo Installing JRD validator
+if [ -z "${validate}" ]; then
     if [ ! `which check-jsonschema` ]; then
+        echo Installing JRD validator
         if [[ `which python` && `which pip` ]];
         then
             echo Installing Python check-jsonschema
             pip install check-jsonschema       
         elif [ ! `which ajv` ];
         then
+            echo Installing JRD validator
             if [[ `which node` && `which npm` ]];
             then
                 echo Installing ajv-cli
@@ -139,22 +140,19 @@ fi
 
 if [ -n "${mastodon}" ]; then
     result=`echo ${name} | sed -e ${mastodon_username_validation_regex}`
-    if [ ! -n ${verbose} ]; then
-        echo !${result}!
-    fi
     if [[ ${result} == "" ]]; then
         valid=true
     fi
     if [[ -n "${verbose}" && ${valid} == "true" ]]; then
         echo "Valid Mastodon username"
     fi
-    if [ ! -n "${valid}" ]; then
+    if [ -z "${valid}" ]; then
         echo "Error: invalid masterdon username"
         exit
     fi
 else
     result=`echo ${name} | sed -e ${RFC3077_username_validation_regex}`
-    if [ ! -n ${verbose} ]; then
+    if [ -z ${verbose} ]; then
         echo !${result}!
     fi
     if [[ ${result} == "" ]]; then
@@ -163,7 +161,7 @@ else
     if [[ -n "${verbose}" && ${valid} == "true" ]]; then
         echo "Valid RFC3077 username"
     fi
-    if [ ! -n "${valid}" ]; then
+    if [ -z "${valid}" ]; then
         echo "Error: invalid RFC3077 username"
         exit
     fi
@@ -176,7 +174,7 @@ resource=acct:$(rawurlencode $address)
 accept="Accept: application/jrd+json"
 base="https://${server}/.well-known/webfinger"
 
-if [ ! -n "${rel}" ];
+if [ -z "${rel}" ];
 then
     uri="${base}?resource=${resource}"
 else
