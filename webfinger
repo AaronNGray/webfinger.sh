@@ -75,9 +75,17 @@ if [[ $# -eq 0 ]]; then
   usage
 fi
 
-name=`echo $1 | sed 's/@\(.*\)@\(.*\)$/\1/'`
+name=`echo $1 | sed 's/\(.*\)@\(.*\)$/\1/'`
 domain=`echo $1 | sed 's/\(.*\)@\(.*\)$/\2/'`
 server=$domain
+
+if [ -n "${verbose}" ]
+then
+    echo name=${name}
+    echo domain=${domain}
+    echo server=${server}
+    echo
+fi
 
 address=${name}@${domain}
 resource=acct:$(rawurlencode $address)
@@ -93,7 +101,7 @@ else
     uri="${base}?resource=${resource}&rel=${rel}"
 fi
 
-command="curl -s -H \"${accept}\" ${uri}"
+command="curl -s --retry 2 --retry-max-time 30 -H \"${accept}\" ${uri}"
 
 if [ -n "${verbose}" ]
 then
@@ -103,18 +111,25 @@ fi
 
 result=`${command}`
 
+if [ -n "${verbose}" ]
+then
+    echo ${result}
+    echo
+fi
+
 if [ "${result}" != "" ];
 then
     echo $result | jq .
 
     if [ -n "${validate}" ]; then
-        if [ ! `which ajv` ];
+        if [[ `which python` && `which pip` ]];
         then
-            if [ `which node` && `which npm` ];
+            pip install check-jsonschema       
+        elif [ ! `which ajv` ];
+        then
+            if [[ `which node` && `which npm` ]];
             then
                 npm install -g ajv-cli ajv-formats
-            else
-                echo "Error: node.js not installed"
             fi
         fi
         if [ ! -e ${program_directory}/jrd.schema.json ]; then
@@ -122,10 +137,21 @@ then
         fi
         echo -e "${result}" >/tmp/out.json
         echo
-        ajv --spec=draft2020 -c ajv-formats -s ${program_directory}/jrd.schema.json -d /tmp/out.json >null
-        if [ $? ]; then
-            echo "valid JRD"
+
+        if [ `which ajv` ]; then
+            ajv --spec=draft2020 -c ajv-formats -s ${program_directory}/jrd.schema.json -d /tmp/out.json >null
+            if [ $? ]; then
+                echo "valid JRD"
+            fi
+        elif [ `which check-jsonschema` ]; then
+            check-jsonschema --schemafile ${program_directory}/jrd.schema.json /tmp/out.json >null
+            if [ $? ]; then
+                echo "valid JRD"
+            fi
+        else
+            echo "No validator options: you need to install python and pip, or Node.js"
         fi
+
         rm /tmp/out.json
     fi
 fi
