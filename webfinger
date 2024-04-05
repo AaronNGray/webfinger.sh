@@ -1,8 +1,15 @@
 #!/usr/bin/env bash
 # webfinger
 
+# constants
+name_regex='s/^\(.*\)@\(.*\)$/\1/'
+domain_regex='s/^\(.*\)@\(.*\)$/\2/'
+mastodon_username_validation_regex='s/^[a-z0-9]\+\([.-]*[a-z0-9]\+\)*$//'
+
 program=$0
 program_directory="$(dirname "$0")"
+
+# install utilities
 
 if [ ! `which curl` ]
 then
@@ -16,7 +23,25 @@ then
     sudo apt-get install jq -y
 fi
 
+if [ -n "${validate}" ]; then
+    if [[ `which python` && `which pip` ]];
+    then
+        pip install check-jsonschema       
+    elif [ ! `which ajv` ];
+    then
+        if [[ `which node` && `which npm` ]];
+        then
+            npm install -g ajv-cli ajv-formats
+        fi
+    fi
+    if [ ! -e ${program_directory}/jrd.schema.json ]; then
+        curl -s https://raw.githubusercontent.com/AaronNGray/webfinger.sh/main/jrd.schema.json >${program_directory}/jrd.schema.json
+    fi
+fi
+
 set -euo pipefail
+
+# flags
 
 rel=
 verbose=
@@ -24,6 +49,8 @@ validate=
 mastodon=
 valid=
 fake=
+
+# encode url
 
 rawurlencode() {
     local string="${1}"
@@ -42,6 +69,8 @@ rawurlencode() {
     echo "${encoded}"    # You can either set a return variable (FASTER)
     REPLY="${encoded}"   #+or echo the result (EASIER)... or both... :p
 }
+
+# command line options
 
 usage() {
 >&2 cat << EOF
@@ -82,12 +111,16 @@ if [[ $# -eq 0 ]]; then
   usage
 fi
 
-name=`echo $1 | sed 's/\(.*\)@\(.*\)$/\1/'`
+# decode handle
 
-mastodon_regex='s/[a-z0-9]\+\([.-]*[a-z0-9]\+\)*//'
+name=`echo $1 | sed ${name_regex}`
+domain=`echo $1 | sed ${domain_regex}`
+server=$domain
+
+# mastodon username validation
 
 if [ -n "${mastodon}" ]; then
-    result=`echo ${name} | sed -e 's/[a-z0-9]\+\([.-]*[a-z0-9]\+\)*//'`
+    result=`echo ${name} | sed -e ${mastodon_username_validation_regex}`
     if [ ! -n ${verbose} ]; then
         echo !${result}!
     fi
@@ -103,8 +136,7 @@ if [ -n "${mastodon}" ]; then
     fi
 fi
 
-domain=`echo $1 | sed 's/\(.*\)@\(.*\)$/\2/'`
-server=$domain
+# verbose output
 
 if [ -n "${verbose}" ]
 then
@@ -114,11 +146,11 @@ then
     echo
 fi
 
+# http get
+
 address=${name}@${domain}
 resource=acct:$(rawurlencode $address)
-
 accept="Accept: application/jrd+json"
-
 base="https://${server}/.well-known/webfinger"
 
 if [ ! -n "${rel}" ];
@@ -130,15 +162,21 @@ fi
 
 command="curl -s --retry 2 --retry-max-time 30 -H \"${accept}\" ${uri}"
 
+# verbose output
+
 if [ -n "${verbose}" ]
 then
     echo ${command}
     echo
 fi
 
+# stop if faking
+
 if [ -n "${fake}" ]; then
     exit
 fi
+
+# do CURL HTTPS GET
 
 result=`${command}`
 
@@ -148,24 +186,15 @@ then
     echo
 fi
 
+# output result
+
 if [ "${result}" != "" ];
 then
     echo $result | jq .
 
+    # optionally perform validation
+
     if [ -n "${validate}" ]; then
-        if [[ `which python` && `which pip` ]];
-        then
-            pip install check-jsonschema       
-        elif [ ! `which ajv` ];
-        then
-            if [[ `which node` && `which npm` ]];
-            then
-                npm install -g ajv-cli ajv-formats
-            fi
-        fi
-        if [ ! -e ${program_directory}/jrd.schema.json ]; then
-            curl -s https://raw.githubusercontent.com/AaronNGray/webfinger.sh/main/jrd.schema.json >${program_directory}/jrd.schema.json
-        fi
         echo -e "${result}" >/tmp/out.json
         echo
 
@@ -185,4 +214,6 @@ then
 
         rm /tmp/out.json
     fi
+else
+    echo Not found
 fi
