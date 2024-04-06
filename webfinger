@@ -249,7 +249,7 @@ then
                 echo "valid JRD"
             fi
         elif [ `which check-jsonschema` ]; then
-            check-jsonschema --schemafile ${program_directory}/jrd.schema.json /tmp/out.json >null
+            check-jsonschema --schemafile /tmp/jrd.schema.json /tmp/out.json >null
             if [ $? ]; then
                 echo "valid JRD"
             fi
